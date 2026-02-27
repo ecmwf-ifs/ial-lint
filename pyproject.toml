@@ -1,0 +1,49 @@
+# Make sure we use setuptools and have all required dependencies for that
+[build-system]
+requires = [
+  "setuptools >= 75.0.0",
+  "setuptools_scm[toml] >= 6.2",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ial-lint"
+authors = [
+  {name = "ECMWF", email = "user_support_section@ecmwf.int"},
+]
+description = "Linter rule implementations for loki-lint"
+requires-python = ">=3.8"
+license = {text = "Apache-2.0"}
+dynamic = ["version", "readme"]
+dependencies = [
+  "loki @ git+https://github.com/ecmwf-ifs/loki@main",  # essential for loki-lint and tests
+]
+
+[project.optional-dependencies]
+tests = [
+  "pytest",
+  "pytest-cov",
+]
+
+[tool.setuptools]
+license-files = ["LICENSE", "AUTHORS.md"]
+
+[tool.setuptools.dynamic]
+readme = {file = ["README.md"], content-type = "text/markdown"}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = [
+  "ial_lint",
+]
+exclude = [
+  "tests",
+]
+
+# Enable SCM versioning
+[tool.setuptools_scm]
+
+[tool.pytest.ini_options]
+testpaths = [
+  "tests"
+]
