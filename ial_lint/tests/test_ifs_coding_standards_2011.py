@@ -20,7 +20,7 @@ pytestmark = pytest.mark.skipif(not available_frontends(),
 
 @pytest.fixture(scope='module', name='rules')
 def fixture_rules():
-    rules = importlib.import_module('lint_rules.ifs_coding_standards_2011')
+    rules = importlib.import_module('ial_lint.lint_rules.ifs_coding_standards_2011')
     return rules
 
 
