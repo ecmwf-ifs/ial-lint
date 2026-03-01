@@ -23,6 +23,7 @@ dependencies = [
 tests = [
   "pytest",
   "pytest-cov",
+  "pylint",
 ]
 
 [tool.setuptools]
