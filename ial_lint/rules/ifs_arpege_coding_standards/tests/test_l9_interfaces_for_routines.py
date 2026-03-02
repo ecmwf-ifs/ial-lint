@@ -8,148 +8,16 @@
 import importlib
 import pytest
 
-from conftest import run_linter
 from loki import Sourcefile
 from loki.lint import DefaultHandler
+
+from conftest import run_linter
 
 
 @pytest.fixture(scope='module', name='rules')
 def fixture_rules():
     rules = importlib.import_module('ial_lint.rules.ifs_arpege_coding_standards')
     return rules
-
-
-def test_implicit_none(rules):
-    fcode = """
-subroutine routine_okay
-implicit none
-integer :: a
-a = 5
-contains
-subroutine contained_routine_not_okay
-! This should report
-integer :: b
-b = 5
-end subroutine contained_routine_not_okay
-end subroutine routine_okay
-
-module mod_okay
-implicit none
-contains
-subroutine contained_mod_routine_okay
-integer :: a
-a = 5
-contains
-subroutine contained_mod_routine_contained_routine_okay
-integer :: b
-b = 2
-end subroutine contained_mod_routine_contained_routine_okay
-end subroutine contained_mod_routine_okay
-end module mod_okay
-
-subroutine routine_not_okay
-! This should report
-integer :: a
-a = 5
-contains
-subroutine contained_not_okay_routine_okay
-implicit none
-integer :: b
-b = 5
-end subroutine contained_not_okay_routine_okay
-end subroutine routine_not_okay
-
-module mod_not_okay
-contains
-subroutine contained_mod_not_okay_routine_okay
-implicit none
-integer :: a
-a = 5
-end subroutine contained_mod_not_okay_routine_okay
-end module mod_not_okay
-
-subroutine routine_also_not_okay
-! This should report
-integer :: a
-a = 5
-contains
-subroutine contained_routine_not_okay
-! This should report
-integer :: b
-b = 5
-end subroutine contained_routine_not_okay
-end subroutine routine_also_not_okay
-
-module mod_also_not_okay
-contains
-subroutine contained_mod_routine_not_okay
-! This should report
-integer :: a
-a = 5
-contains
-subroutine contained_contained_routine_not_okay
-! This should report
-integer :: b
-b = 5
-end subroutine contained_contained_routine_not_okay
-end subroutine contained_mod_routine_not_okay
-end module mod_also_not_okay
-    """
-    source = Sourcefile.from_source(fcode)
-    messages = []
-    handler = DefaultHandler(target=messages.append)
-    run_linter(source, [rules.MissingImplicitNoneRule], handlers=[handler])
-
-    expected_messages = (
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'mod_not_okay', '(l. 40)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'mod_also_not_okay', '(l. 61)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'contained_mod_routine_not_okay', '(l. 63)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'contained_contained_routine_not_okay', '(l. 68)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'contained_routine_not_okay', '(l. 7)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'routine_not_okay', '(l. 28)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'routine_also_not_okay', '(l. 49)']),
-        (['[L1]', 'MissingImplicitNoneRule', '`IMPLICIT NONE`', 'contained_routine_not_okay', '(l. 54)']),
-    )
-
-    assert len(messages) == len(expected_messages)
-    for msg, keywords in zip(messages, expected_messages):
-        for keyword in keywords:
-            assert keyword in msg
-
-
-def test_only_param_global_var_rule(rules):
-    fcode = """
-module some_mod
-use other_mod, only: some_type
-implicit none
-
-integer, parameter :: param_ok = 123
-integer, parameter :: arr_param_ok(:) = (/ 1, 2, 3 /)
-integer :: var_not_ok
-integer, allocatable :: arr_not_ok(:), other_arr_not_ok(:,:)
-integer, pointer :: ptr_not_ok
-real, parameter :: rparam_ok = -42.
-type(some_type) :: dt_var_not_ok
-type(some_type) :: dt_arr_not_ok(2)
-end module some_mod
-    """
-    source = Sourcefile.from_source(fcode)
-    messages = []
-    handler = DefaultHandler(target=messages.append)
-    run_linter(source, [rules.OnlyParameterGlobalVarRule], handlers=[handler])
-
-    expected_messages = (
-        (['L3', 'OnlyParameterGlobalVarRule', 'var_not_ok', '(l. 8)']),
-        (['L3', 'OnlyParameterGlobalVarRule', 'arr_not_ok', 'other_arr_not_ok', '(l. 9)']),
-        (['L3', 'OnlyParameterGlobalVarRule', 'ptr_not_ok', '(l. 10)']),
-        (['L3', 'OnlyParameterGlobalVarRule', 'dt_var_not_ok', '(l. 12)']),
-        (['L3', 'OnlyParameterGlobalVarRule', 'dt_arr_not_ok', '(l. 13)']),
-    )
-
-    assert len(messages) == len(expected_messages)
-    for msg, keywords in zip(messages, expected_messages):
-        for keyword in keywords:
-            assert keyword in msg
 
 
 def test_missing_intfb_rule_subroutine(rules):
