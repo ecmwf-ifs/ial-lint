@@ -21,7 +21,7 @@ pytestmark = pytest.mark.skipif(not available_frontends(),
 
 @pytest.fixture(scope='module', name='rules')
 def fixture_rules():
-    rules = importlib.import_module('ial_lint.lint_rules.debug_rules')
+    rules = importlib.import_module('ial_lint.rules.debug_rules')
     return rules
 
 

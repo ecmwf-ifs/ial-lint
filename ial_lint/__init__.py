@@ -7,7 +7,7 @@
 
 from importlib.metadata import version, PackageNotFoundError
 
-from ial_lint.lint_rules import *  # noqa
+from ial_lint.rules import *  # noqa
 
 try:
     __version__ = version("ial_lint")
