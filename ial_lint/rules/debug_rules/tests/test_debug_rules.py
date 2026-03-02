@@ -10,13 +10,9 @@ import importlib
 from pathlib import Path
 import pytest
 
-from conftest import run_linter, available_frontends
+from conftest import run_linter
 from loki import Sourcefile, FindInlineCalls, FindNodes, VariableDeclaration
 from loki.lint import DefaultHandler
-
-
-pytestmark = pytest.mark.skipif(not available_frontends(),
-                                reason='Supported frontend not available')
 
 
 @pytest.fixture(scope='module', name='rules')
@@ -25,8 +21,7 @@ def fixture_rules():
     return rules
 
 
-@pytest.mark.parametrize('frontend', available_frontends())
-def test_arg_size_array_slices(rules, frontend):
+def test_arg_size_array_slices(rules):
     """
     Test for argument size mismatch when arguments are passed as array slices.
     """
@@ -77,8 +72,8 @@ if(lhook) call dr_hook('kernel', 1, zhook_handle)
 end subroutine kernel
     """.strip()
 
-    driver_source = Sourcefile.from_source(fcode_driver, frontend=frontend)
-    kernel_source = Sourcefile.from_source(fcode_kernel, frontend=frontend)
+    driver_source = Sourcefile.from_source(fcode_driver)
+    kernel_source = Sourcefile.from_source(fcode_kernel)
 
     driver = driver_source['driver']
     kernel = kernel_source['kernel']
@@ -99,8 +94,7 @@ end subroutine kernel
         assert f'dummy_arg: {ref_arg}_d' in msg
 
 
-@pytest.mark.parametrize('frontend', available_frontends())
-def test_arg_size_array_sequence(rules, frontend):
+def test_arg_size_array_sequence(rules):
     """
     Test for argument size mismatch when arguments are passed as array sequences.
     """
@@ -150,8 +144,8 @@ if(lhook) call dr_hook('kernel', 1, zhook_handle)
 end subroutine kernel
     """.strip()
 
-    driver_source = Sourcefile.from_source(fcode_driver, frontend=frontend)
-    kernel_source = Sourcefile.from_source(fcode_kernel, frontend=frontend)
+    driver_source = Sourcefile.from_source(fcode_driver)
+    kernel_source = Sourcefile.from_source(fcode_kernel)
 
     driver = driver_source['driver']
     kernel = kernel_source['kernel']
@@ -171,8 +165,7 @@ end subroutine kernel
         assert f'dummy_arg: {ref_arg}_d' in msg
 
 
-@pytest.mark.parametrize('frontend', available_frontends())
-def test_dynamic_ubound_checks(rules, frontend):
+def test_dynamic_ubound_checks(rules):
     """
     Test the run-time UBOUND checking linter rule
     """
@@ -213,7 +206,7 @@ call some_other_kernel(klon, klen, nblk, var0, var1, var2, var3, var4)
 end subroutine kernel
     """.strip()
 
-    kernel = Sourcefile.from_source(fcode, frontend=frontend)
+    kernel = Sourcefile.from_source(fcode)
     kernel.path = Path(__file__).parent / 'dynamic_ubound_test.F90'
 
     messages = []

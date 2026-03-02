@@ -8,13 +8,9 @@
 import importlib
 import pytest
 
-from conftest import run_linter, available_frontends
+from conftest import run_linter
 from loki import Sourcefile
 from loki.lint import DefaultHandler
-
-
-pytestmark = pytest.mark.skipif(not available_frontends(),
-                                reason='Suitable frontend not available')
 
 
 @pytest.fixture(scope='module', name='rules')
@@ -23,8 +19,7 @@ def fixture_rules():
     return rules
 
 
-@pytest.mark.parametrize('frontend', available_frontends())
-def test_implicit_none(rules, frontend):
+def test_implicit_none(rules):
     fcode = """
 subroutine routine_okay
 implicit none
@@ -100,7 +95,7 @@ end subroutine contained_contained_routine_not_okay
 end subroutine contained_mod_routine_not_okay
 end module mod_also_not_okay
     """
-    source = Sourcefile.from_source(fcode, frontend=frontend)
+    source = Sourcefile.from_source(fcode)
     messages = []
     handler = DefaultHandler(target=messages.append)
     run_linter(source, [rules.MissingImplicitNoneRule], handlers=[handler])
@@ -122,8 +117,7 @@ end module mod_also_not_okay
             assert keyword in msg
 
 
-@pytest.mark.parametrize('frontend', available_frontends())
-def test_only_param_global_var_rule(rules, frontend):
+def test_only_param_global_var_rule(rules):
     fcode = """
 module some_mod
 use other_mod, only: some_type
@@ -139,7 +133,7 @@ type(some_type) :: dt_var_not_ok
 type(some_type) :: dt_arr_not_ok(2)
 end module some_mod
     """
-    source = Sourcefile.from_source(fcode, frontend=frontend)
+    source = Sourcefile.from_source(fcode)
     messages = []
     handler = DefaultHandler(target=messages.append)
     run_linter(source, [rules.OnlyParameterGlobalVarRule], handlers=[handler])
