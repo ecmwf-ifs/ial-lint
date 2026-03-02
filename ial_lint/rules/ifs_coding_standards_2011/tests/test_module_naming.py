@@ -5,23 +5,17 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import importlib
 from pathlib import Path
-import pytest
 
 from loki import Sourcefile
 from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
-
-@pytest.fixture(scope='module', name='rules')
-def fixture_rules():
-    rules = importlib.import_module('ial_lint.rules.ifs_coding_standards_2011')
-    return rules
+from ial_lint.rules import ifs_coding_standards_2011 as rules
 
 
-def test_module_naming(rules):
+def test_module_naming():
     '''Test file and modules for checking that naming is correct and matches each other.'''
     fcode = """
 ! This is ok

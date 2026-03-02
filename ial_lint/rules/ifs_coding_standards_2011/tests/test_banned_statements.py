@@ -5,7 +5,6 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import importlib
 import pytest
 
 from loki import Sourcefile
@@ -13,14 +12,10 @@ from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
-
-@pytest.fixture(scope='module', name='rules')
-def fixture_rules():
-    rules = importlib.import_module('ial_lint.rules.ifs_coding_standards_2011')
-    return rules
+from ial_lint.rules import ifs_coding_standards_2011 as rules
 
 
-def test_banned_statements_default(rules):
+def test_banned_statements_default():
     '''Test for banned statements with default.'''
     fcode = """
 subroutine banned_statements()
@@ -50,7 +45,7 @@ end subroutine banned_statements
     (['GO TO'], False),
     (['GO TO', 'RETURN'], False),
     (['RETURN'], True)])
-def test_banned_statements_config(rules, banned_statements, passes):
+def test_banned_statements_config(banned_statements, passes):
     '''Test for banned statements with custom config.'''
     fcode = """
 subroutine banned_statements()

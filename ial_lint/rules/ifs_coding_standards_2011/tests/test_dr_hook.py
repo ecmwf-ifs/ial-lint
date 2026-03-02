@@ -5,22 +5,15 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import importlib
-import pytest
-
 from loki import Sourcefile
 from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
-
-@pytest.fixture(scope='module', name='rules')
-def fixture_rules():
-    rules = importlib.import_module('ial_lint.rules.ifs_coding_standards_2011')
-    return rules
+from ial_lint.rules import ifs_coding_standards_2011 as rules
 
 
-def test_dr_hook_okay(rules):
+def test_dr_hook_okay():
     fcode = """
 subroutine routine_okay
 use yomhook, only: lhook, dr_hook
@@ -65,7 +58,7 @@ end subroutine routine_okay
     assert len(messages) == 0
 
 
-def test_dr_hook_routine(rules):
+def test_dr_hook_routine():
     fcode = """
 subroutine routine_not_okay_a
 use yomhook, only: lhook, dr_hook
@@ -186,7 +179,7 @@ end subroutine routine_not_okay_e
                for letter, i in (('a', 0), ('c', 4), ('c', 5), ('d', 6), ('e', 7)))
 
 
-def test_dr_hook_module(rules):
+def test_dr_hook_module():
     fcode = """
 module some_mod
 

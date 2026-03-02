@@ -6,23 +6,17 @@
 # nor does it submit to any jurisdiction.
 
 import os
-import importlib
 from pathlib import Path
-import pytest
 
 from loki import Sourcefile, FindInlineCalls, FindNodes, VariableDeclaration
 from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
-
-@pytest.fixture(scope='module', name='rules')
-def fixture_rules():
-    rules = importlib.import_module('ial_lint.rules.debug_rules')
-    return rules
+from ial_lint.rules import debug_rules as rules
 
 
-def test_dynamic_ubound_checks(rules):
+def test_dynamic_ubound_checks():
     """
     Test the run-time UBOUND checking linter rule
     """

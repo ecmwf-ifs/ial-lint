@@ -5,22 +5,15 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import importlib
-import pytest
-
 from loki import Sourcefile
 from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
-
-@pytest.fixture(scope='module', name='rules')
-def fixture_rules():
-    rules = importlib.import_module('ial_lint.rules.ifs_arpege_coding_standards')
-    return rules
+from ial_lint.rules import ifs_arpege_coding_standards as rules
 
 
-def test_missing_intfb_rule_subroutine(rules):
+def test_missing_intfb_rule_subroutine():
     fcode = """
 subroutine missing_intfb_rule(a, b, dt)
     use some_mod, only: imported_routine
@@ -75,7 +68,7 @@ end subroutine missing_intfb_rule
             assert keyword in msg
 
 
-def test_missing_intfb_rule_module(rules):
+def test_missing_intfb_rule_module():
     fcode = """
 module missing_intfb_rule_mod
     use external_mod, only: module_imported_routine, module_imported_func

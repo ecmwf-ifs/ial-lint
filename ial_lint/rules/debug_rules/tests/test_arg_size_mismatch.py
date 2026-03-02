@@ -5,22 +5,15 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import importlib
-import pytest
-
 from loki import Sourcefile
 from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
-
-@pytest.fixture(scope='module', name='rules')
-def fixture_rules():
-    rules = importlib.import_module('ial_lint.rules.debug_rules')
-    return rules
+from ial_lint.rules import debug_rules as rules
 
 
-def test_arg_size_array_slices(rules):
+def test_arg_size_array_slices():
     """
     Test for argument size mismatch when arguments are passed as array slices.
     """
@@ -93,7 +86,7 @@ end subroutine kernel
         assert f'dummy_arg: {ref_arg}_d' in msg
 
 
-def test_arg_size_array_sequence(rules):
+def test_arg_size_array_sequence():
     """
     Test for argument size mismatch when arguments are passed as array sequences.
     """
