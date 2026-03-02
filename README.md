@@ -7,7 +7,8 @@
 
 **IAL-lint** is a code linting package for IFS-Arpege-LAM (IAL) codes
 and components. It aims to provide code validation checks and possible
-auto-fixes for these Fortran codes based on the Loki package. The
+auto-fixes for these Fortran codes based on the
+[Loki](https://github.com/ecmwf-ifs/loki) package. The
 specific rules for these code components are documented in the
 [IFS-Arpege-LAM coding
 standard](https://github.com/ecmwf-ifs/ifs-arpege-coding-standards)
@@ -26,7 +27,7 @@ any jurisdiction.
 
 ## Contributing
 
-Contributions to Loki are welcome. In order to do so, please open an issue where
+Contributions to IAL-lint are welcome. In order to do so, please open an issue where
 a feature request or bug can be discussed. Then create a pull request with your
 contribution and sign the
-[contributors license agreement (CLA)](https://bol-claassistant.ecmwf.int/ecmwf-ifs/loki).
+[contributors license agreement (CLA)](https://bol-claassistant.ecmwf.int/ecmwf-ifs/ial-lint).
