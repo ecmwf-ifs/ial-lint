@@ -49,5 +49,9 @@ jobs:
 
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v5
+        if: ${{ ! startsWith(matrix.os, 'macos') }}
         with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ial-lint
+          files: ./coverage.xml
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
