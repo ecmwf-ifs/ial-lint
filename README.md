@@ -6,8 +6,9 @@
 [![codecov](https://codecov.io/gh/ecmwf-ifs/ial-lint/branch/main/graph/badge.svg?token=9ZDS95SFWI)](https://codecov.io/gh/ecmwf-ifs/ial-lint)
 
 **IAL-lint** is a code linting package for IFS-Arpege-LAM (IAL) codes
+**IAL-lint** is a code linting package for IFS-Arpege-LAM (IAL) codes
 and components. It aims to provide code validation checks and possible
-auto-fixes for these Fortran codes based on the
+auto-fixes for these Fortran codes based on the 
 [Loki](https://github.com/ecmwf-ifs/loki) package. The
 specific rules for these code components are documented in the
 [IFS-Arpege-LAM coding
@@ -28,6 +29,5 @@ any jurisdiction.
 ## Contributing
 
 Contributions to IAL-lint are welcome. In order to do so, please open an issue where
-a feature request or bug can be discussed. Then create a pull request with your
-contribution and sign the
-[contributors license agreement (CLA)](https://bol-claassistant.ecmwf.int/ecmwf-ifs/ial-lint).
+a feature request or bug can be discussed. Then create a pull request
+and agree to the [contributors license agreement (CLA)](https://github.com/ecmwf/codex/blob/main/Legal/contributor_license_agreement.md).
