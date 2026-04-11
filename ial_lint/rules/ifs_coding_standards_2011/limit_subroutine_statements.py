@@ -29,7 +29,7 @@ class LimitSubroutineStatementsRule(GenericRule):  # Coding standards 2.2
 
     # List of nodes that are considered executable statements
     exec_nodes = (
-        ir.Assignment, ir.MaskedStatement, ir.Intrinsic, ir.Allocation,
+        ir.Assignment, ir.MaskedStatement, ir.GenericStmt, ir.Allocation,
         ir.Deallocation, ir.Nullify, ir.CallStatement
     )
 
@@ -38,16 +38,17 @@ class LimitSubroutineStatementsRule(GenericRule):  # Coding standards 2.2
 
     @classmethod
     def check_subroutine(cls, subroutine, rule_report, config, **kwargs):
-        '''Count the number of nodes in the subroutine and check if they exceed
-        a given maximum number.
+        '''
+        Count the number of nodes in the subroutine and check if they
+        exceed a given maximum number.
         '''
         # Count total number of executable nodes
         nodes = FindNodes(cls.exec_nodes).visit(subroutine.ir)
         num_nodes = len(nodes)
+
         # Subtract number of non-exec intrinsic nodes
-        intrinsic_nodes = filter(lambda node: isinstance(node, ir.Intrinsic), nodes)
-        num_nodes -= sum(1 for _ in filter(
-            lambda node: cls.match_non_exec_intrinsic_node.match(node.text), intrinsic_nodes))
+        intrinsic_nodes = filter(lambda node: isinstance(node, (ir.FormatStmt, ir.PrintStmt)), nodes)
+        num_nodes -= len(list(intrinsic_nodes))
 
         if num_nodes > config['max_num_statements']:
             msg = (f'Subroutine has {num_nodes} executable statements '

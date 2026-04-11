@@ -30,7 +30,7 @@ class BannedStatementsRule(GenericRule):  # Coding standards 4.11
     @classmethod
     def check_subroutine(cls, subroutine, rule_report, config, **kwargs):
         '''Check for banned statements in intrinsic nodes.'''
-        for intr in FindNodes(ir.Intrinsic).visit(subroutine.ir):
+        for intr in FindNodes(ir.GenericStmt).visit(subroutine.ir):
             for keyword in config['banned']:
-                if keyword.lower() in intr.text.lower():
+                if keyword.upper() in intr.text.upper() or keyword.upper() == intr.keyword:
                     rule_report.add(f'Banned keyword "{keyword}"', intr)

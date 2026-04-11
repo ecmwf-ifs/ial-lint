@@ -5,8 +5,6 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import re
-
 from loki import FindNodes, ir
 from loki.lint import GenericRule, RuleType
 
@@ -23,15 +21,13 @@ class ImplicitNoneRule(GenericRule):  # Coding standards 4.4
         'title': '"IMPLICIT NONE" is mandatory in all routines.',
     }
 
-    _regex = re.compile(r'implicit\s+none\b', re.I)
-
     @staticmethod
     def check_for_implicit_none(ast):
         """
         Check for intrinsic nodes that match the regex.
         """
-        for intr in FindNodes(ir.Intrinsic).visit(ast):
-            if ImplicitNoneRule._regex.match(intr.text):
+        for intr in FindNodes(ir.ImplicitStmt).visit(ast):
+            if not intr.text or intr.text.lower() == 'none':
                 break
         else:
             return False
