@@ -20,6 +20,8 @@ class MissingImplicitNoneRule(GenericRule):
 
     type = RuleType.SERIOUS
 
+    fixable = True
+
     docs = {
         'id': 'L1',
         'title': (
@@ -68,3 +70,22 @@ class MissingImplicitNoneRule(GenericRule):
         if not found_implicit_none:
             # No 'IMPLICIT NONE' intrinsic node was found
             rule_report.add('No `IMPLICIT NONE` found', subroutine)
+
+    @classmethod
+    def fix_module(cls, module, rule_report, config):
+        """
+        Check for ``IMPLICIT NONE`` in the module's spec.
+        """
+        if not module.spec:
+            module.spec = ir.Section()
+
+        if not cls.check_for_implicit_none(module.spec):
+            # Find index between imports and declarations in spec
+            imports = FindNodes(ir.Import).visit(module.spec)
+            idx = module.spec.body.index(imports[-1]) if imports else 0
+            module.spec.insert(idx, ir.Intrinsic('IMPLICIT NONE'))
+
+            # Ensure that the string for the spec region is re-created
+            if module.spec.source:
+                module.spec.source.invalidate()
+            module.source.invalidate()
