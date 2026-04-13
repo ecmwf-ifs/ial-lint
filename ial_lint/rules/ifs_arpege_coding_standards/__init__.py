@@ -13,5 +13,6 @@ current version of the coding standards.
 """
 
 from ial_lint.rules.ifs_arpege_coding_standards.l1_implicit_none import *  # noqa
+from ial_lint.rules.ifs_arpege_coding_standards.l2_use_module_only import *  # noqa
 from ial_lint.rules.ifs_arpege_coding_standards.l3_global_variables import *  # noqa
 from ial_lint.rules.ifs_arpege_coding_standards.l9_interfaces_for_routines import *  # noqa
