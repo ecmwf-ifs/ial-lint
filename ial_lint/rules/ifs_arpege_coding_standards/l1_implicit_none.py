@@ -5,7 +5,7 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-from loki import ir, FindNodes, Module
+from loki import ir, FindNodes, Transformer
 from loki.lint import GenericRule, RuleType
 
 
@@ -33,10 +33,10 @@ class MissingImplicitNoneRule(GenericRule):
     @classmethod
     def check_for_implicit_none(cls, ir_):
         """
-        Check for intrinsic nodes that match the regex.
+        Check for ``IMPLICIT NONE`` in a given IR tree.
         """
         for intr in FindNodes(ir.ImplicitStmt).visit(ir_):
-            if not intr.text or intr.text.lower() == 'none':
+            if intr.text == 'NONE':
                 break
         else:
             return False
@@ -49,7 +49,6 @@ class MissingImplicitNoneRule(GenericRule):
         """
         found_implicit_none = cls.check_for_implicit_none(module.spec)
         if not found_implicit_none:
-            # No 'IMPLICIT NONE' intrinsic node was found
             rule_report.add('No `IMPLICIT NONE` found', module)
 
     @classmethod
@@ -58,34 +57,72 @@ class MissingImplicitNoneRule(GenericRule):
         Check for ``IMPLICIT NONE`` in the subroutine's spec or an enclosing
         :any:`Module` scope.
         """
-        found_implicit_none = cls.check_for_implicit_none(subroutine.ir)
+        found_here = cls.check_for_implicit_none(subroutine.ir)
 
-        # Check if enclosing scopes contain implicit none
-        scope = subroutine.parent
-        while scope and not found_implicit_none:
-            if isinstance(scope, Module) and hasattr(scope, 'spec') and scope.spec:
-                found_implicit_none = cls.check_for_implicit_none(scope.spec)
-            scope = scope.parent if hasattr(scope, 'parent') else None
+        # Check if any of the enclosing parent scopes contain implicit none
+        found_in_parent = any(cls.check_for_implicit_none(parent.spec) for parent in subroutine.parents)
 
-        if not found_implicit_none:
-            # No 'IMPLICIT NONE' intrinsic node was found
+        if not found_here and not found_in_parent:
             rule_report.add('No `IMPLICIT NONE` found', subroutine)
+
+        if found_here and found_in_parent:
+            rule_report.add('Redundant `IMPLICIT NONE` found', subroutine)
 
     @classmethod
     def fix_module(cls, module, rule_report, config):
         """
         Check for ``IMPLICIT NONE`` in the module's spec.
         """
-        if not module.spec:
-            module.spec = ir.Section()
 
         if not cls.check_for_implicit_none(module.spec):
             # Find index between imports and declarations in spec
             imports = FindNodes(ir.Import).visit(module.spec)
-            idx = module.spec.body.index(imports[-1]) if imports else 0
-            module.spec.insert(idx, ir.Intrinsic('IMPLICIT NONE'))
+            idx = module.spec.body.index(imports[-1]) + 1 if imports else 0
+            module.spec = module.spec or ir.Section()
+            module.spec.insert(idx, ir.ImplicitStmt())
 
             # Ensure that the string for the spec region is re-created
             if module.spec.source:
-                module.spec.source.invalidate()
-            module.source.invalidate()
+                module.spec.source.invalidate(children=True)
+            module.source.invalidate(children=True)
+
+        # Recurse into subroutines
+        for routine in module.subroutines:
+            cls.fix_subroutine(routine, rule_report, config)
+
+    @classmethod
+    def fix_subroutine(cls, subroutine, rule_report, config):
+        """
+        Insert missing ``IMPLICIT NONE`` or remove redundant ones.
+        """
+        found_here = cls.check_for_implicit_none(subroutine.ir)
+
+        found_in_parent = any(cls.check_for_implicit_none(parent.spec) for parent in subroutine.parents)
+        mapper = {}
+
+        if found_here and found_in_parent:
+            # Find redundant `ImplicitStmt` and remove via mapper
+            mapper = {i: None for i in FindNodes(ir.ImplicitStmt).visit(subroutine.spec) if i.text == 'NONE'}
+            subroutine.spec = Transformer(mapper).visit(subroutine.spec)
+
+            if subroutine.spec.source:
+                subroutine.spec.source.invalidate(children=True)
+            subroutine.source.invalidate(children=True)
+
+            subroutine.parent.source.invalidate(children=True)
+            if subroutine.parent.contains.source:
+                subroutine.parent.contains.source.invalidate(children=True)
+
+        if not found_here and not found_in_parent:
+            # Find index between imports and declarations in spec
+            imports = FindNodes(ir.Import).visit(subroutine.spec)
+            idx = (subroutine.spec.body.index(imports[-1]) + 1) if imports else 0
+            subroutine.spec.insert(idx, ir.ImplicitStmt())
+
+            # Ensure that the string for the spec region is re-created
+            if subroutine.spec.source:
+                subroutine.spec.source.invalidate()
+
+        # Recurse into internal subroutines
+        for child in subroutine.subroutines:
+            cls.fix_subroutine(child, rule_report, config)
