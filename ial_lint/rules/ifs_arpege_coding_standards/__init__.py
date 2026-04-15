@@ -17,3 +17,4 @@ from ial_lint.rules.ifs_arpege_coding_standards.l2_use_module_only import *  # n
 from ial_lint.rules.ifs_arpege_coding_standards.l3_global_variables import *  # noqa
 from ial_lint.rules.ifs_arpege_coding_standards.l6_optional_argument_position import *  # noqa
 from ial_lint.rules.ifs_arpege_coding_standards.l9_interfaces_for_routines import *  # noqa
+from ial_lint.rules.ifs_arpege_coding_standards.l11_array_syntax import *  # noqa
