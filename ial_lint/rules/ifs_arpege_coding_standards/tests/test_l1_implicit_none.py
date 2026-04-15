@@ -5,7 +5,10 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-from loki import Sourcefile
+import os
+from pathlib import Path
+
+from loki import FindNodes, Sourcefile
 from loki import ir
 from loki.lint import DefaultHandler
 
@@ -21,6 +24,34 @@ def _get_messages(fcode):
     handler = DefaultHandler(target=messages.append)
     run_linter(source, [rules.MissingImplicitNoneRule], handlers=[handler])
     return messages
+
+
+def _run_l1_with_fix(fcode):
+    """Run the L1 rule with fixing enabled and collect messages."""
+    source = Sourcefile.from_source(fcode)
+    source.path = Path(__file__).parent / 'l1_implicit_none_fix_test.F90'
+    messages = []
+    handler = DefaultHandler(target=messages.append)
+    run_linter(source, [rules.MissingImplicitNoneRule], config={'fix': True}, handlers=[handler])
+    return source, messages
+
+
+def _cleanup_fixed_source(source):
+    if source.path and Path(source.path).exists():
+        os.remove(source.path)
+
+
+def _get_implicit_none_count(ir_):
+    return sum(intr.text == 'NONE' for intr in FindNodes(ir.ImplicitStmt).visit(ir_))
+
+
+def _apply_l1_module_fix(fcode):
+    """Apply the L1 module fixer directly and return the mutated module."""
+    source = Sourcefile.from_source(fcode)
+    module = source.modules[0]
+    report = type('RuleReport', (), {'problem_reports': (), 'rule': rules.MissingImplicitNoneRule})()
+    rules.MissingImplicitNoneRule.fix_module(module, report, {})
+    return source, module
 
 
 def _assert_messages(messages, expected_messages):
@@ -172,3 +203,104 @@ def test_l1_non_none_implicit_does_not_satisfy_rule():
     assert rules.MissingImplicitNoneRule.check_for_implicit_none(
         ir.Section(body=(ir.ImplicitStmt(text='NONE'),))
     )
+
+
+def test_l1_fix_module_adds_missing_implicit_none():
+    fcode = """
+module mod_missing_implicit_none
+use some_mod, only: some_type
+integer :: a
+type(some_type) :: b
+end module mod_missing_implicit_none
+    """
+    source, module = _apply_l1_module_fix(fcode)
+
+    assert _get_implicit_none_count(module.spec) == 1
+
+    rendered = source.to_fortran().lower()
+    use_idx = rendered.index('use some_mod, only: some_type')
+    implicit_idx = rendered.index('implicit none')
+    integer_idx = rendered.index('integer :: a')
+    assert use_idx < implicit_idx < integer_idx
+
+
+def test_l1_fix_module_removes_redundant_implicit_none_in_contained_routines():
+    fcode = """
+module mod_with_redundant_implicit_none
+implicit none
+contains
+subroutine contained_routine_redundant
+implicit none
+integer :: a
+a = 5
+contains
+subroutine nested_routine_redundant
+implicit none
+integer :: b
+b = 2
+end subroutine nested_routine_redundant
+end subroutine contained_routine_redundant
+end module mod_with_redundant_implicit_none
+    """
+    source, module = _apply_l1_module_fix(fcode)
+
+    contained = module['contained_routine_redundant']
+    nested = contained['nested_routine_redundant']
+
+    assert _get_implicit_none_count(module.spec) == 1
+    assert _get_implicit_none_count(contained.spec) == 0
+    assert _get_implicit_none_count(nested.spec) == 0
+
+    rendered = source.to_fortran().lower()
+    assert rendered.count('implicit none') == 1
+
+
+def test_l1_fix_subroutine_adds_missing_implicit_none_when_no_parent_has_it():
+    fcode = """
+subroutine routine_missing_implicit_none
+use some_mod, only: some_type
+integer :: a
+type(some_type) :: b
+a = 5
+end subroutine routine_missing_implicit_none
+    """
+    source, messages = _run_l1_with_fix(fcode)
+
+    _assert_messages(messages, (
+        ['[L1]', 'MissingImplicitNoneRule', 'routine_missing_implicit_none', 'No `IMPLICIT NONE` found'],
+    ))
+
+    routine = source['routine_missing_implicit_none']
+    assert _get_implicit_none_count(routine.spec) == 1
+
+    rendered = source.to_fortran().lower()
+    use_idx = rendered.index('use some_mod, only: some_type')
+    implicit_idx = rendered.index('implicit none')
+    integer_idx = rendered.index('integer :: a')
+    assert use_idx < implicit_idx < integer_idx
+    _cleanup_fixed_source(source)
+
+
+def test_l1_fix_does_not_add_routine_implicit_none_when_module_already_has_it():
+    fcode = """
+module mod_with_inherited_implicit_none
+implicit none
+contains
+subroutine routine_inheriting_implicit_none
+integer :: a
+a = 5
+end subroutine routine_inheriting_implicit_none
+end module mod_with_inherited_implicit_none
+    """
+    source, messages = _run_l1_with_fix(fcode)
+
+    assert not messages
+
+    module = source['mod_with_inherited_implicit_none']
+    routine = module['routine_inheriting_implicit_none']
+    assert _get_implicit_none_count(module.spec) == 1
+    assert _get_implicit_none_count(routine.spec) == 0
+
+    rendered = source.to_fortran().lower()
+    assert rendered.count('implicit none') == 1
+    _cleanup_fixed_source(source)
