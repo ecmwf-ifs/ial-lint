@@ -5,12 +5,29 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
+import os
+from pathlib import Path
+
 from loki import Sourcefile
 from loki.lint import DefaultHandler
 
 from conftest import run_linter
 
 from ial_lint.rules import ifs_arpege_coding_standards as rules
+
+
+def _run_i1_with_fix(fcode):
+    source = Sourcefile.from_source(fcode)
+    source.path = Path(__file__).parent / 'i1_variable_naming_fix_test.F90'
+    messages = []
+    handler = DefaultHandler(target=messages.append)
+    run_linter(source, [rules.VariableNamingRule], config={'fix': True}, handlers=[handler])
+    return source, messages
+
+
+def _cleanup_fixed_source(source):
+    if source.path and Path(source.path).exists():
+        os.remove(source.path)
 
 
 def test_i1_variable_naming():
@@ -53,3 +70,87 @@ end module i1_var_mod
     assert len(messages) == len(expected_messages)
     for keywords in expected_messages:
         assert any(all(keyword in msg for keyword in keywords) for msg in messages)
+
+
+def test_i1_fix_variable_naming_local_variables_only():
+    fcode = """
+subroutine i1_fix_var_test(karg)
+  implicit none
+  integer, intent(in) :: karg
+  integer :: klocal
+  real :: plocal
+  logical :: ldlocal
+
+  klocal = karg
+  plocal = 1.0
+  ldlocal = .true.
+end subroutine i1_fix_var_test
+    """.strip()
+    source, messages = _run_i1_with_fix(fcode)
+
+    expected_messages = (
+        ('[I1]', 'VariableNamingRule', 'Local variable "klocal" should start with "I"'),
+        ('[I1]', 'VariableNamingRule', 'Local variable "plocal" should start with "Z"'),
+        ('[I1]', 'VariableNamingRule', 'Local variable "ldlocal" should start with "LL"'),
+    )
+
+    assert len(messages) == len(expected_messages)
+    for keywords in expected_messages:
+        assert any(all(keyword in msg for keyword in keywords) for msg in messages)
+
+    rendered = source.to_fortran()
+    assert 'INTEGER :: Ilocal' in rendered
+    assert 'REAL :: Zlocal' in rendered
+    assert 'LOGICAL :: LLlocal' in rendered
+    assert 'Ilocal = karg' in rendered
+    assert 'Zlocal = 1.0' in rendered
+    assert 'LLlocal = .true.' in rendered
+    assert 'INTEGER :: klocal' not in rendered
+    assert 'REAL :: plocal' not in rendered
+    assert 'LOGICAL :: ldlocal' not in rendered
+    _cleanup_fixed_source(source)
+
+
+def test_i1_fix_variable_naming_skips_collisions():
+    fcode = """
+subroutine i1_fix_var_collision_test
+  implicit none
+  integer :: ilocal, klocal
+
+  klocal = 1
+  ilocal = klocal
+end subroutine i1_fix_var_collision_test
+    """.strip()
+    source, messages = _run_i1_with_fix(fcode)
+
+    assert len(messages) == 1
+    assert 'Local variable "klocal" should start with "I"' in messages[0]
+
+    rendered = source.to_fortran().lower()
+    assert 'integer :: ilocal, klocal' in rendered
+    assert 'ilocal = klocal' in rendered
+    _cleanup_fixed_source(source)
+
+
+def test_i1_fix_variable_naming_does_not_rename_dummy_arguments():
+    fcode = """
+subroutine i1_fix_dummy_test(iarg)
+  implicit none
+  integer, intent(in) :: iarg
+  integer :: klocal
+
+  klocal = iarg
+end subroutine i1_fix_dummy_test
+    """.strip()
+    source, messages = _run_i1_with_fix(fcode)
+
+    assert len(messages) == 2
+    assert any('Dummy argument "iarg" should start with "K"' in msg for msg in messages)
+    assert any('Local variable "klocal" should start with "I"' in msg for msg in messages)
+
+    rendered = source.to_fortran()
+    assert 'SUBROUTINE i1_fix_dummy_test (iarg)' in rendered
+    assert 'INTEGER, INTENT(IN) :: iarg' in rendered
+    assert 'INTEGER :: Ilocal' in rendered
+    assert 'Ilocal = iarg' in rendered
+    _cleanup_fixed_source(source)

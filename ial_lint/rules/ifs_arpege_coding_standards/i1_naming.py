@@ -7,7 +7,7 @@
 
 from pathlib import Path
 
-from loki import BasicType
+from loki import BasicType, SubstituteExpressions
 from loki.lint import GenericRule, RuleType
 
 
@@ -54,6 +54,8 @@ class VariableNamingRule(GenericRule):
 
     type = RuleType.SERIOUS
 
+    fixable = True
+
     docs = {
         'id': 'I1',
         'title': 'Dummy and local variables should follow the IFS-Arpege type prefix naming convention.'
@@ -76,6 +78,16 @@ class VariableNamingRule(GenericRule):
         prefixes = cls.dummy_prefixes if is_dummy else cls.local_prefixes
         return prefixes.get(symbol.type.dtype, 'yd' if is_dummy else 'yl')
 
+    @staticmethod
+    def fixed_name(symbol, expected):
+        name = symbol.name
+        lower_name = name.lower()
+        if lower_name.startswith(('ll', 'ld', 'yl', 'yd')):
+            suffix = name[2:]
+        else:
+            suffix = name[1:]
+        return f'{expected.upper()}{suffix}'
+
     @classmethod
     def check_subroutine(cls, subroutine, rule_report, config, **kwargs):
         dummy_names = {arg.name.lower() for arg in subroutine.arguments}
@@ -93,3 +105,41 @@ class VariableNamingRule(GenericRule):
                 scope = 'Dummy argument' if is_dummy else 'Local variable'
                 msg = f'{scope} "{symbol.name}" should start with "{expected.upper()}"'
                 rule_report.add(msg, decl)
+
+    @classmethod
+    def fix_subroutine(cls, subroutine, rule_report, config):
+        dummy_names = {arg.name.lower() for arg in subroutine.arguments}
+        all_names = {symbol.name.lower() for decl in subroutine.declarations for symbol in decl.symbols}
+        rename_map = {}
+
+        for decl in subroutine.declarations:
+            for symbol in decl.symbols:
+                if symbol.type.parameter:
+                    continue
+
+                is_dummy = symbol.name.lower() in dummy_names
+                if is_dummy:
+                    continue
+
+                expected = cls.expected_prefix(symbol, is_dummy=False)
+                if symbol.name.lower().startswith(expected):
+                    continue
+
+                new_name = cls.fixed_name(symbol, expected)
+                if new_name.lower() in all_names:
+                    continue
+
+                rename_map[symbol] = symbol.clone(name=new_name)
+                all_names.add(new_name.lower())
+
+        if not rename_map:
+            return {}
+
+        subroutine.spec = SubstituteExpressions(rename_map).visit(subroutine.spec)
+        subroutine.body = SubstituteExpressions(rename_map).visit(subroutine.body)
+
+        if subroutine.spec.source:
+            subroutine.spec.source.invalidate(children=True)
+        subroutine.source.invalidate(children=True)
+
+        return {}
