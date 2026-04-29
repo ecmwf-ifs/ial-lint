@@ -20,6 +20,8 @@ def test_banned_statements_default():
     fcode = """
 subroutine banned_statements()
 integer :: dummy
+integer, parameter :: n = 3
+integer, DIMENSION(n) :: nonono
 
 dummy = 5
 call foobar(dummy)
@@ -33,10 +35,10 @@ end subroutine banned_statements
     handler = DefaultHandler(target=messages.append)
     _ = run_linter(source, [rules.BannedStatementsRule], handlers=[handler])
 
-    assert len(messages) == 3
+    assert len(messages) == 4
     keywords = ('BannedStatementsRule', '[4.11]')
     assert all(all(keyword in msg for keyword in keywords) for msg in messages)
-    banned_statements = ('GO TO', 'PRINT', 'CONTINUE')
+    banned_statements = ('DIMENSION', 'GO TO', 'PRINT', 'CONTINUE')
     assert all(any(keyword in msg for keyword in banned_statements) for msg in messages)
 
 
