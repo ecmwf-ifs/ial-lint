@@ -103,6 +103,10 @@ class MissingIntfbRule(GenericRule):
 
         for node, calls in FindInlineCalls(with_ir_node=True).visit(subroutine.body):
             for call in calls:
+                # Skip statement functions, as these are defined locally via headers
+                if call.routine and isinstance(call.routine, ir.StatementFunction):
+                    continue
+
                 if not call.function.parent and call.name.lower() not in external_symbols:
                     missing_calls[call.name.lower()] += [node]
 
