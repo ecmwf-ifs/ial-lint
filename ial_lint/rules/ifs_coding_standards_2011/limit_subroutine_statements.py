@@ -5,8 +5,6 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-import re
-
 from loki import FindNodes, ir
 from loki.lint import GenericRule, RuleType
 
@@ -32,9 +30,6 @@ class LimitSubroutineStatementsRule(GenericRule):  # Coding standards 2.2
         ir.Assignment, ir.MaskedStatement, ir.GenericStmt, ir.Allocation,
         ir.Deallocation, ir.Nullify, ir.CallStatement
     )
-
-    # Pattern for intrinsic nodes that are allowed as non-executable statements
-    match_non_exec_intrinsic_node = re.compile(r'\s*(?:PRINT|FORMAT)', re.I)
 
     @classmethod
     def check_subroutine(cls, subroutine, rule_report, config, **kwargs):
