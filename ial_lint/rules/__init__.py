@@ -5,10 +5,6 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-from importlib.metadata import version, PackageNotFoundError
-
-try:
-    __version__ = version("lint_rules")
-except PackageNotFoundError:
-    # package is not installed
-    pass
+from ial_lint.rules.debug_rules import *  # noqa
+from ial_lint.rules.ifs_arpege_coding_standards import *  # noqa
+from ial_lint.rules.ifs_coding_standards_2011 import *  # noqa

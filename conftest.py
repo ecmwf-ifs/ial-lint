@@ -5,18 +5,10 @@
 # granted to it by virtue of its status as an intergovernmental organisation
 # nor does it submit to any jurisdiction.
 
-from loki import HAVE_FP, FP
 from loki.lint import Reporter, Linter
 
 
-__all__ = ['available_frontends', 'run_linter']
-
-
-def available_frontends():
-    """Choose frontend to use (Linter currently relies exclusively on Fparser)"""
-    if HAVE_FP:
-        return [FP,]
-    return []
+__all__ = ['run_linter']
 
 
 def run_linter(sourcefile, rule_list, config=None, handlers=None, targets=None):
