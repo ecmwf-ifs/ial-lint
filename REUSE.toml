@@ -3,6 +3,7 @@ version = 1
 [[annotations]]
 path = [
   ".github/workflows/*.yml",
+  ".github/dependabot.yml",
   ".gitignore",
   ".pylintrc",
   "AUTHORS.md",
