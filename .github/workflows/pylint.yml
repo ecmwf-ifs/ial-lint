@@ -32,3 +32,6 @@ jobs:
 
       - name: Code check
         run:  pylint --rcfile=.pylintrc --output-format=parseable:pylint.log,text ial_lint
+
+      - name: Check REUSE compliance
+        run: reuse lint
