@@ -1,11 +1,15 @@
 # IAL-lint: A Fortran linting package for IFS-Arpege-LAM codes
 
 [![license](https://img.shields.io/github/license/ecmwf-ifs/ial-lint)](https://www.apache.org/licenses/LICENSE-2.0.html)
+[![Static Badge](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity/emerging_badge.svg)](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity#emerging)
 [![pylint](https://github.com/ecmwf-ifs/ial-lint/actions/workflows/pylint.yml/badge.svg)](https://github.com/ecmwf-ifs/ial-lint/actions/workflows/pylint.yml)
 [![pytest](https://github.com/ecmwf-ifs/ial-lint/actions/workflows/pytest.yml/badge.svg)](https://github.com/ecmwf-ifs/ial-lint/actions/workflows/pytest.yml)
 [![codecov](https://codecov.io/gh/ecmwf-ifs/ial-lint/branch/main/graph/badge.svg?token=9ZDS95SFWI)](https://codecov.io/gh/ecmwf-ifs/ial-lint)
 
-**IAL-lint** is a code linting package for IFS-Arpege-LAM (IAL) codes
+> [!IMPORTANT]
+> This software is **Emerging** and subject to ECMWF's guidelines on
+> [Software Maturity](https://github.com/ecmwf/codex/raw/refs/heads/main/Project%20Maturity).
+
 **IAL-lint** is a code linting package for IFS-Arpege-LAM (IAL) codes
 and components. It aims to provide code validation checks and possible
 auto-fixes for these Fortran codes based on the 
