@@ -84,6 +84,7 @@ any jurisdiction.
 
 ## Contributing
 
-Contributions to IAL-lint are welcome. In order to do so, please open an issue where
-a feature request or bug can be discussed. Then create a pull request
-and agree to the [contributors license agreement (CLA)](https://github.com/ecmwf/codex/blob/main/Legal/contributor_license_agreement.md).
+Contributions to IAL-lint are welcome. Please read
+[CONTRIBUTING.md](CONTRIBUTING.md) before opening an issue or pull request.
+All participation in this project is governed by the
+[Code of Conduct](CODE_OF_CONDUCT.md).
