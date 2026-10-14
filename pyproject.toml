@@ -16,7 +16,7 @@ requires-python = ">=3.9"
 license = {text = "Apache-2.0"}
 dynamic = ["version", "readme"]
 dependencies = [
-  "loki @ git+https://github.com/ecmwf-ifs/loki@0.4.0",  # essential for loki-lint and tests
+  "loki @ git+https://github.com/ecmwf-ifs/loki@0.4.1",  # essential for loki-lint and tests
 ]
 
 [project.optional-dependencies]
